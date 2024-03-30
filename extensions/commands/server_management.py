@@ -328,6 +328,32 @@ class server_management(commands.Cog):
                     colour=discord.Colour.green(),
                 ),
             )
+        
+    @app_commands.command(
+        name="list_blacklisted_words",
+        description="List all blacklisted words in this server",
+    )
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(administrator=True)
+    async def list_blacklisted_words(self, interaction: discord.Interaction):
+        filtered_words = await DataManager.get_filter_data(interaction.guild.id)
+        blacklisted_words = filtered_words["blacklisted_words"]
+
+        if blacklisted_words is None or len(blacklisted_words) == 0:
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    description=f"<:white_cross:1096791282023669860> There are no blacklisted words in this server",
+                    colour=discord.Colour.orange(),
+                )
+            )
+
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                description=f"Blacklisted words in this server:\n\n{',\n'.join(blacklisted_words)}",
+                colour=discord.Colour.green(),
+            ),
+            ephemeral=True
+        )
 
     @app_commands.command(
         name="set_welcome_message",
