@@ -196,8 +196,6 @@ class server(commands.Cog):
                     ]
                 )
 
-            return any([user.display_avatar.is_animated(), user.banner])
-
         def boosting_server(user: discord.Member):
             for member in interaction.guild.premium_subscribers:
                 if member.id == user.id:
