@@ -336,7 +336,7 @@ class moderation(commands.Cog):
                 member,
             ):
                 if any(member in entry.user.name for entry in bans):
-                    if entry.user.name == member:
+                    if any(member == entry.user.name for entry in bans):
                         await interaction.guild.unban(entry.user)
                         return await interaction.edit_original_response(
                             embed=discord.Embed(
@@ -344,24 +344,24 @@ class moderation(commands.Cog):
                                 colour=discord.Colour.green(),
                             )
                         )
+                    else:
+                        return await interaction.edit_original_response(
+                            embed=discord.Embed(
+                                description=(
+                                    "<:white_cross:1096791282023669860> Could not find that user"
+                                )
+                                + (
+                                    f", did you mean any of these similar usernames?\n\n {'\n'.join([f'* {entry.user.mention} - {entry.user.id} - {entry.user.name}' for entry in bans if member in entry.user.name])}"
+                                    if len([entry.user.name for entry in bans if member in entry.user.name]) > 0
+                                    else ""
+                                ),
+                                colour=discord.Colour.red(),
+                            )
+                        )
                 else:
                     return await interaction.edit_original_response(
                         embed=discord.Embed(
-                            description=(
-                                "<:white_cross:1096791282023669860> Could not find that user"
-                            )
-                            + (
-                                f", did you mean any of these similar usernames?\n\n {'\n'.join([f"* {entry.user.mention} - {entry.user.id} - {entry.user.name}" for entry in bans if member in entry.user.name])}"
-                                if len(
-                                    [
-                                        entry.user.name
-                                        for entry in bans
-                                        if member in entry.user.name
-                                    ]
-                                )
-                                > 0
-                                else ""
-                            ),
+                            description="<:white_cross:1096791282023669860> Could not find that user",
                             colour=discord.Colour.red(),
                         )
                     )
