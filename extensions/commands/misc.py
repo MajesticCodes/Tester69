@@ -2,7 +2,6 @@ import datetime
 import json
 import os
 import random
-import time
 from io import BytesIO
 from typing import Optional
 
@@ -31,40 +30,31 @@ class misc(commands.Cog):
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
     @app_commands.describe(search="The keyword you want to search the Gif by")
     async def search_gif(self, interaction: discord.Interaction, search: Optional[str]):
-        if search == None:
-            search1 = "Random Gif"
-        else:
-            search1 = search + " Gif"
-        embed = discord.Embed(title=f"{search1}", colour=discord.Colour.green())
-        session = aiohttp.ClientSession()
-        try:
-            if search == None:
+        embed = discord.Embed(title=(f"{search} Gif" if search != None else "Random Gif"), colour=discord.Colour.green())
+
+        if search != None:
+            search.replace(" ", "+")
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(
+                    (f"https://api.giphy.com/v1/gifs/random?api_key="
+                    + DataManager.get("config", "giphy_key"))
+                    if search is None
+                    else (f"http://api.giphy.com/v1/gifs/search?q={search}&api_key="
+                    + DataManager.get("config", "giphy_key"))
+                ) as response:
+                    data = json.loads(await response.text())
+                    gif_choice = random.randint(0, 9)
+                    embed.set_image(url=data["data"][gif_choice]["images"]["original"]["url"])
+            except IndexError:
                 response = await session.get(
                     f"https://api.giphy.com/v1/gifs/random?api_key="
                     + DataManager.get("config", "giphy_key")
                 )
                 data = json.loads(await response.text())
                 embed.set_image(url=data["data"]["images"]["original"]["url"])
-            else:
-                search.replace(" ", "+")
-                response = await session.get(
-                    f"http://api.giphy.com/v1/gifs/search?q={search}&api_key="
-                    + DataManager.get("config", "giphy_key")
-                )
-                data = json.loads(await response.text())
-                gif_choice = random.randint(0, 9)
-                embed.set_image(
-                    url=data["data"][gif_choice]["images"]["original"]["url"]
-                )
-        except IndexError:
-            response = await session.get(
-                f"https://api.giphy.com/v1/gifs/random?api_key="
-                + DataManager.get("config", "giphy_key")
-            )
-            data = json.loads(await response.text())
-            embed.set_image(url=data["data"]["images"]["original"]["url"])
 
-        await session.close()
         embed.set_footer(
             icon_url=interaction.user.avatar,
             text=f"Requested by - {interaction.user} | Powered by Giphy API ❤️",
@@ -79,37 +69,33 @@ class misc(commands.Cog):
     async def search_unsplash(
         self, interaction: discord.Interaction, search: Optional[str]
     ):
-        if search == None:
-            search1 = "Random Image"
-        else:
-            search1 = search + " Image"
-        embed = discord.Embed(title=f"{search1}", colour=discord.Colour.green())
-        session = aiohttp.ClientSession()
+        embed = discord.Embed(title=(f"{search} Image" if search != None else "Random Image"), colour=discord.Colour.green())
 
-        try:
-            if search == None:
+        if search != None:
+            search.replace(" ", "+")
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(
+                    (f"https://api.unsplash.com/photos/random?client_id="
+                    + DataManager.get("config", "unsplash_key"))
+                    if search is None
+                    else (f"https://api.unsplash.com/search/photos?query={search}&client_id="
+                    + DataManager.get("config", "unsplash_key"))
+                ) as response:
+                    data = json.loads(await response.text())
+                    embed.set_image(url=data["urls"]["full"])
+
+                    data = json.loads(await response.text())
+                    image_choice = random.randint(0, 9)
+                    embed.set_image(url=data["results"][image_choice]["urls"]["full"])
+            except IndexError:
                 response = await session.get(
                     f"https://api.unsplash.com/photos/random?client_id="
                     + DataManager.get("config", "unsplash_key")
                 )
                 data = json.loads(await response.text())
                 embed.set_image(url=data["urls"]["full"])
-            else:
-                search.replace(" ", "+")
-                response = await session.get(
-                    f"https://api.unsplash.com/search/photos?query={search}&client_id="
-                    + DataManager.get("config", "unsplash_key")
-                )
-                data = json.loads(await response.text())
-                image_choice = random.randint(0, 9)
-                embed.set_image(url=data["results"][image_choice]["urls"]["full"])
-        except IndexError:
-            response = await session.get(
-                f"https://api.unsplash.com/photos/random?client_id="
-                + DataManager.get("config", "unsplash_key")
-            )
-            data = json.loads(await response.text())
-            embed.set_image(url=data["urls"]["full"])
 
         await session.close()
         embed.set_footer(
@@ -121,13 +107,13 @@ class misc(commands.Cog):
     @app_commands.command(name="cat", description="Get a random cat image")
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
     async def cat(self, interaction: discord.Interaction):
-        session = aiohttp.ClientSession()
-        response = await session.get("https://api.thecatapi.com/v1/images/search")
-        data = json.loads(await response.text())
-        embed = discord.Embed(title="🐱 Meow", colour=discord.Colour.green())
-        embed.url = data[0]["url"]
-        embed.set_image(url=data[0]["url"])
-        await session.close()
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://api.thecatapi.com/v1/images/search") as response:
+                data = json.loads(await response.text())
+                embed = discord.Embed(title="🐱 Meow", colour=discord.Colour.green())
+                embed.url = data[0]["url"]
+                embed.set_image(url=data[0]["url"])
+                
         embed.set_footer(
             icon_url=interaction.user.avatar,
             text=f"Requested by - {interaction.user} | Powered by The Cat API ❤️",
@@ -137,13 +123,13 @@ class misc(commands.Cog):
     @app_commands.command(name="dog", description="Get a random dog image")
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
     async def dog(self, interaction: discord.Interaction):
-        session = aiohttp.ClientSession()
-        response = await session.get("https://api.thedogapi.com/v1/images/search")
-        data = json.loads(await response.text())
-        embed = discord.Embed(title=f"🐶 Woof...", colour=discord.Colour.green())
-        embed.url = data[0]["url"]
-        embed.set_image(url=data[0]["url"])
-        await session.close()
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://api.thedogapi.com/v1/images/search") as response:
+                data = json.loads(await response.text())
+                embed = discord.Embed(title="🐶 Woof", colour=discord.Colour.green())
+                embed.url = data[0]["url"]
+                embed.set_image(url=data[0]["url"])
+        
         embed.set_footer(
             icon_url=interaction.user.avatar,
             text=f"Requested by - {interaction.user} | Powered by The Dog API ❤️",
@@ -153,12 +139,12 @@ class misc(commands.Cog):
     @app_commands.command(name="dadjoke", description="Get a random dad joke")
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
     async def dadjoke(self, interaction: discord.Interaction):
-        session = aiohttp.ClientSession()
-        response = await session.get(
-            "https://icanhazdadjoke.com/", headers={"Accept": "text/plain"}
-        )
-        data = await response.text()
-        await session.close()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://icanhazdadjoke.com/", headers={"Accept": "text/plain"}
+            ) as response:
+                data = await response.text()
+                
         await interaction.response.send_message(
             embed=discord.Embed(
                 description=f"🤣 {data}", colour=discord.Colour.green()
@@ -174,29 +160,28 @@ class misc(commands.Cog):
         search="The keyword you want to search the definition from Wikipedia"
     )
     async def wikipedia(self, interaction: discord.Interaction, *, search: str):
-        try:
-            session = aiohttp.ClientSession()
-            response = await session.get(
-                f"https://en.wikipedia.org/api/rest_v1/page/summary/{search}"
-            )
-            data = json.loads(await response.text())
-            embed = discord.Embed(title=f"📚 {search}", colour=discord.Colour.green())
-            embed.url = data["content_urls"]["desktop"]["page"]
-            embed.description = data["extract"]
-            embed.set_footer(
-                icon_url=interaction.user.avatar,
-                text=f"Requested by - {interaction.user} | Powered by Wikipedia API ❤️",
-            )
+        async with aiohttp.ClientSession() as session:
             try:
-                embed.set_thumbnail(url=data["thumbnail"]["source"])
-            except KeyError:
-                pass
-        except:
-            embed = discord.Embed(
-                description="<:white_cross:1096791282023669860> Couldn't find a Wikipedia article with that name",
-                colour=discord.Colour.red(),
-            )
-        await session.close()
+                response = await session.get(
+                    f"https://en.wikipedia.org/api/rest_v1/page/summary/{search}"
+                )
+                data = json.loads(await response.text())
+                embed = discord.Embed(title=f"📚 {search}", colour=discord.Colour.green())
+                embed.url = data["content_urls"]["desktop"]["page"]
+                embed.description = data["extract"]
+                embed.set_footer(
+                    icon_url=interaction.user.avatar,
+                    text=f"Requested by - {interaction.user} | Powered by Wikipedia API ❤️",
+                )
+                try:
+                    embed.set_thumbnail(url=data["thumbnail"]["source"])
+                except KeyError:
+                    pass
+            except:
+                embed = discord.Embed(
+                    description="<:white_cross:1096791282023669860> Couldn't find a Wikipedia article with that name",
+                    colour=discord.Colour.red(),
+                )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(
@@ -209,33 +194,26 @@ class misc(commands.Cog):
     async def urban(self, interaction: discord.Interaction, *, search: str = None):
         embeds = []
 
-        session = aiohttp.ClientSession()
-
-        if search is None:
-            response = await session.get(f"https://api.urbandictionary.com/v0/random")
-        else:
-            response = await session.get(
-                f"https://api.urbandictionary.com/v0/define?term={search}"
-            )
-
-        for word in json.loads(await response.text())["list"]:
-            try:
-                embed = discord.Embed(
-                    title=f"📚 {word['word']}", colour=discord.Colour.green()
-                )
-                embed.url = word["permalink"]
-                embed.description = word["definition"].replace("[", "").replace("]", "")
-                embed.set_footer(
-                    icon_url=interaction.user.avatar,
-                    text=f"Requested by - {interaction.user} | Powered by Urban Dictionary API ❤️",
-                )
-                embeds.append(embed)
-            except IndexError:
-                embed = discord.Embed(
-                    description="<:white_cross:1096791282023669860> Couldn't find a definition for that term",
-                    colour=discord.Colour.red(),
-                )
-        await session.close()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://api.urbandictionary.com/v0/random" if search is None else f"https://api.urbandictionary.com/v0/define?term={search}") as response:
+                for word in json.loads(await response.text())["list"]:
+                    try:
+                        embed = discord.Embed(
+                            title=f"📚 {word['word']}", colour=discord.Colour.green()
+                        )
+                        embed.url = word["permalink"]
+                        embed.description = word["definition"].replace("[", "").replace("]", "")
+                        embed.set_footer(
+                            icon_url=interaction.user.avatar,
+                            text=f"Requested by - {interaction.user} | Powered by Urban Dictionary API ❤️",
+                        )
+                        embeds.append(embed)
+                    except IndexError:
+                        embed = discord.Embed(
+                            description="<:white_cross:1096791282023669860> Couldn't find a definition for that term",
+                            colour=discord.Colour.red(),
+                        )
+                        
         await Paginator.Simple().paginate(interaction, pages=embeds)
 
     @app_commands.command(name="github", description="Get a user's GitHub profile")
@@ -244,73 +222,73 @@ class misc(commands.Cog):
         search="The GitHub username you want to search the profile of"
     )
     async def github(self, interaction: discord.Interaction, *, search: str):
-        session = aiohttp.ClientSession()
-        try:
-            response = await session.get(f"https://api.github.com/users/{search}")
-            data = json.loads(await response.text())
-            embed = discord.Embed(title=f"📚 {search}", colour=discord.Colour.green())
-            embed.url = data["html_url"]
-            if data["bio"] is not None:
-                embed.description = data["bio"]
-            embed.set_footer(
-                icon_url=interaction.user.avatar,
-                text=f"Requested by - {interaction.user} | Powered by GitHub API ❤️",
-            )
-            embed.set_thumbnail(url=data["avatar_url"])
-            embed.add_field(name="Followers", value=data["followers"], inline=True)
-            embed.add_field(name="Following", value=data["following"], inline=True)
-            embed.add_field(
-                name="Public Repos", value=data["public_repos"], inline=True
-            )
-        except KeyError:
-            embed = discord.Embed(colour=discord.Colour.red())
-            embed.description = "<:white_cross:1096791282023669860> Couldn't find a GitHub user with that name"
-        await session.close()
+        async with aiohttp.ClientSession() as session:
+            try:
+                response = await session.get(f"https://api.github.com/users/{search}")
+                data = json.loads(await response.text())
+                embed = discord.Embed(title=f"📚 {search}", colour=discord.Colour.green())
+                embed.url = data["html_url"]
+                if data["bio"] is not None:
+                    embed.description = data["bio"]
+                embed.set_footer(
+                    icon_url=interaction.user.avatar,
+                    text=f"Requested by - {interaction.user} | Powered by GitHub API ❤️",
+                )
+                embed.set_thumbnail(url=data["avatar_url"])
+                embed.add_field(name="Followers", value=data["followers"], inline=True)
+                embed.add_field(name="Following", value=data["following"], inline=True)
+                embed.add_field(
+                    name="Public Repos", value=data["public_repos"], inline=True
+                )
+            except KeyError:
+                embed = discord.Embed(colour=discord.Colour.red())
+                embed.description = "<:white_cross:1096791282023669860> Couldn't find a GitHub user with that name"
+        
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(name="weather", description="Get the weather for a location")
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
     @app_commands.describe(search="The location you want to search the weather for")
     async def weather(self, interaction: discord.Interaction, *, search: str):
-        session = aiohttp.ClientSession()
-        try:
-            location = await session.get(
-                f"http://api.openweathermap.org/geo/1.0/direct?q={search}&limit=1&appid="
-                + DataManager.get("config", "weather_api_key")
-            )
-            lat = json.loads(await location.text())[0]["lat"]
-            lon = json.loads(await location.text())[0]["lon"]
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(
+                    f"http://api.openweathermap.org/geo/1.0/direct?q={search}&limit=1&appid="
+                    + DataManager.get("config", "weather_api_key")
+                ) as location:
+                    lat = json.loads(await location.text())[0]["lat"]
+                    lon = json.loads(await location.text())[0]["lon"]
+                
+                async with session.get(
+                    f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid="
+                    + DataManager.get("config", "weather_api_key")
+                ) as response:
+                    data = json.loads(await response.text())
+                    embed = discord.Embed(
+                        title=f"Weather for {search}",
+                        description=f"* **Last Updated:** {discord.utils.format_dt(datetime.datetime.fromtimestamp(data['dt']), style='F')}\n"
+                        f"* **Sunrise:** {discord.utils.format_dt(datetime.datetime.fromtimestamp(data['sys']['sunrise']), style='T')}\n"
+                        f"* **Sunset:** {discord.utils.format_dt(datetime.datetime.fromtimestamp(data['sys']['sunset']), style='T')}\n"
+                        f"* **Description:** {data['weather'][0]['description']}\n"
+                        f"* **Temperature:** {round(data['main']['temp'] - 273.15)}°C\n"
+                        f"* **Feels Like:** {round(data['main']['feels_like'] - 273.15)}°C\n"
+                        f"* **Humidity:** {data['main']['humidity']}%\n"
+                        f"* **Wind Speed:** {int(data['wind']['speed'] * 1.60934)} km/h ({data['wind']['speed']} mph)\n"
+                        f"* **Cloudiness:** {data['clouds']['all']}%",
+                        colour=discord.Colour.blurple(),
+                    )
 
-            response = await session.get(
-                f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid="
-                + DataManager.get("config", "weather_api_key")
-            )
-            data = json.loads(await response.text())
-            embed = discord.Embed(
-                title=f"Weather for {search}",
-                description=f"* **Last Updated:** {discord.utils.format_dt(datetime.datetime.fromtimestamp(data['dt']), style='F')}\n"
-                f"* **Sunrise:** {discord.utils.format_dt(datetime.datetime.fromtimestamp(data['sys']['sunrise']), style='T')}\n"
-                f"* **Sunset:** {discord.utils.format_dt(datetime.datetime.fromtimestamp(data['sys']['sunset']), style='T')}\n"
-                f"* **Description:** {data['weather'][0]['description']}\n"
-                f"* **Temperature:** {round(data['main']['temp'] - 273.15)}°C\n"
-                f"* **Feels Like:** {round(data['main']['feels_like'] - 273.15)}°C\n"
-                f"* **Humidity:** {data['main']['humidity']}%\n"
-                f"* **Wind Speed:** {int(data['wind']['speed'] * 1.60934)} km/h ({data['wind']['speed']} mph)\n"
-                f"* **Cloudiness:** {data['clouds']['all']}%",
-                colour=discord.Colour.blurple(),
-            )
-
-            embed.set_footer(
-                icon_url=interaction.user.avatar,
-                text=f"Requested by - {interaction.user} | Powered by OpenWeatherMap API ❤️",
-            )
-            embed.set_thumbnail(
-                url=f"http://openweathermap.org/img/w/{data['weather'][0]['icon']}.png"
-            )
-        except IndexError:
-            embed = discord.Embed(colour=discord.Colour.red())
-            embed.description = "<:white_cross:1096791282023669860> Couldn't find a location with that name"
-        await session.close()
+                    embed.set_footer(
+                        icon_url=interaction.user.avatar,
+                        text=f"Requested by - {interaction.user} | Powered by OpenWeatherMap API ❤️",
+                    )
+                    embed.set_thumbnail(
+                        url=f"http://openweathermap.org/img/w/{data['weather'][0]['icon']}.png"
+                    )
+            except IndexError:
+                embed = discord.Embed(colour=discord.Colour.red())
+                embed.description = "<:white_cross:1096791282023669860> Couldn't find a location with that name"
+            
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(
@@ -322,67 +300,43 @@ class misc(commands.Cog):
         search="The location you want to search the weather forecast for"
     )
     async def forecast(self, interaction: discord.Interaction, *, search: str):
-        session = aiohttp.ClientSession()
-        try:
-            location = await session.get(
-                f"http://api.openweathermap.org/geo/1.0/direct?q={search}&limit=1&appid="
-                + DataManager.get("config", "weather_api_key")
-            )
-            lat = json.loads(await location.text())[0]["lat"]
-            lon = json.loads(await location.text())[0]["lon"]
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(
+                    f"http://api.openweathermap.org/geo/1.0/direct?q={search}&limit=1&appid="
+                    + DataManager.get("config", "weather_api_key")
+                ) as location:
+                    lat = json.loads(await location.text())[0]["lat"]
+                    lon = json.loads(await location.text())[0]["lon"]
+                
+                async with session.get(
+                    f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid="
+                    + DataManager.get("config", "weather_api_key")
+                ) as response:
+                    data = json.loads(await response.text())
+                    embed = discord.Embed(
+                        title=f"Weather Forecast for {search}",
+                        colour=discord.Colour.from_rgb(173, 216, 230),
+                    )
 
-            response = await session.get(
-                f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid="
-                + DataManager.get("config", "weather_api_key")
-            )
-            data = json.loads(await response.text())
-            embed = discord.Embed(
-                title=f"Weather Forecast for {search}",
-                colour=discord.Colour.from_rgb(173, 216, 230),
-            )
-
-            embed.set_footer(
-                icon_url=interaction.user.avatar,
-                text=f"Requested by - {interaction.user} | Powered by OpenWeatherMap API ❤️",
-            )
-            embed.set_thumbnail(
-                url=f"http://openweathermap.org/img/w/{data['list'][0]['weather'][0]['icon']}.png"
-            )
-            for i in range(0, 5):
-                embed.add_field(
-                    name=f"{datetime.datetime.fromtimestamp(data['list'][i]['dt']).strftime('%H:%M')} - {datetime.datetime.fromtimestamp(data['list'][i]['dt']).strftime('%d/%m/%Y')}",
-                    value=f"{data['list'][i]['weather'][0]['description']}\n{round(data['list'][i]['main']['temp'] - 273.15)}°C",
-                    inline=True,
-                )
-        except IndexError:
-            embed = discord.Embed(colour=discord.Colour.red())
-            embed.description = "<:white_cross:1096791282023669860> Couldn't find a location with that name"
-        await session.close()
+                    embed.set_footer(
+                        icon_url=interaction.user.avatar,
+                        text=f"Requested by - {interaction.user} | Powered by OpenWeatherMap API ❤️",
+                    )
+                    embed.set_thumbnail(
+                        url=f"http://openweathermap.org/img/w/{data['list'][0]['weather'][0]['icon']}.png"
+                    )
+                    for i in range(0, 5):
+                        embed.add_field(
+                            name=f"{datetime.datetime.fromtimestamp(data['list'][i]['dt']).strftime('%H:%M')} - {datetime.datetime.fromtimestamp(data['list'][i]['dt']).strftime('%d/%m/%Y')}",
+                            value=f"{data['list'][i]['weather'][0]['description']}\n{round(data['list'][i]['main']['temp'] - 273.15)}°C",
+                            inline=True,
+                        )
+            except IndexError:
+                embed = discord.Embed(colour=discord.Colour.red())
+                embed.description = "<:white_cross:1096791282023669860> Couldn't find a location with that name"
+            
         await interaction.response.send_message(embed=embed, ephemeral=True)
-
-    @app_commands.command(
-        name="count", description="Count from one number to another number"
-    )
-    @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
-    @app_commands.describe(
-        start="The number you want to start counting from",
-        end="The number you want to stop counting at",
-    )
-    async def count(
-        self,
-        interaction: discord.Interaction,
-        start: int,
-        end: int,
-    ):
-        await interaction.response.defer(ephemeral=True)
-        while start <= end:
-            with open(f"{interaction.user.id}.txt", "a") as f:
-                f.write(f"{start}\n")
-                start += 1
-        await interaction.followup.send(
-            ephemeral=True, file=discord.File(f"{interaction.user.id}.txt")
-        )
-        os.remove(f"{interaction.user.id}.txt")
 
     @app_commands.command(
         name="transcript", description="Get a transcript of a channel"
