@@ -565,22 +565,16 @@ class ticket_views(discord.ui.View):
             panel_data = await DataManager.get_panel_data(self.panel_id)
             for user in await interaction.channel.fetch_members():
                 member = interaction.guild.get_member(user.id)
-                try:
-                    if member:
-                        if any(
-                            role.id in panel_data["panel_moderators"]
-                            for role in member.roles
-                        ):
-                            continue
-                        else:
-                            await interaction.channel.remove_user(member)
-                    else:
+                if member:
+                    if any(
+                        role.id in panel_data["panel_moderators"]
+                        for role in member.roles
+                    ):
                         continue
-                except TypeError as e:
-                    print(panel_data)
-                    print(self.panel_id)
-                    print(e)
-
+                    else:
+                        await interaction.channel.remove_user(member)
+                else:
+                    continue
             try:
                 user = self.bot.get_user(self.user_id)
                 await interaction.channel.remove_user(user)
@@ -624,6 +618,17 @@ class panel_views(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         panel_data = await DataManager.get_panel_data(interaction.message.id)
+
+        if panel_data == None:
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Error",
+                    description="This panel has been deleted from the database. Please create a new panel",
+                    colour=discord.Colour.red(),
+                ),
+                ephemeral=True,
+            )
+        
         i = 0
         for thread in interaction.channel.threads:
             if thread.name == f"ticket-{interaction.user.name}":
@@ -633,8 +638,6 @@ class panel_views(discord.ui.View):
                     await asyncio.sleep(0.1)
                 except discord.DiscordException:
                     continue
-
-        print(panel_data)
 
         if i >= panel_data["limit_per_user"]:
             return await interaction.response.send_message(
@@ -1061,7 +1064,7 @@ class ticket(commands.GroupCog):
     async def edit_panel(
         self, interaction: discord.Interaction, message: discord.Message
     ):
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
         for panel in await DataManager.get_all_panels():
             if message.id == panel["id"]:
                 panel = await DataManager.get_panel_data(message.id)
@@ -1076,7 +1079,6 @@ class ticket(commands.GroupCog):
                         ),
                         colour=discord.Colour.blurple(),
                     ),
-                    ephemeral=True,
                     view=panel_edit_views(
                         self.bot,
                         message.id,
@@ -1093,8 +1095,7 @@ class ticket(commands.GroupCog):
                         title="Error",
                         description="This is not a ticket panel",
                         colour=discord.Colour.red(),
-                    ),
-                    ephemeral=True,
+                    )
                 )
 
 
