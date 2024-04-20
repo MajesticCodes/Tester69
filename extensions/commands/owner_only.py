@@ -135,7 +135,7 @@ class owner_only(commands.Cog):
                 return await ctx.reply(
                     embed=discord.Embed(
                         description=(
-                            f"<:white_checkmark:1096793014287995061> Skipped all cooldowns for {ctx.author.name}"
+                            f"<:white_checkmark:1096793014287995061> Skipped all cooldowns"
                         ),
                         colour=discord.Colour.green(),
                     )
@@ -169,7 +169,7 @@ class owner_only(commands.Cog):
                 return await ctx.reply(
                     embed=discord.Embed(
                         description=(
-                            f"<:white_checkmark:1096793014287995061> Skipped all cooldowns for {member.name}"
+                            f"<:white_checkmark:1096793014287995061> Skipped all cooldowns for {member.mention}"
                         ),
                         colour=discord.Colour.green(),
                     )
