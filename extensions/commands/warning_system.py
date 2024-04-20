@@ -20,9 +20,9 @@ class warning_system(commands.Cog):
         reason="The reason for the warning",
     )
     async def warn(
-        self, interaction: discord.Interaction, user: discord.User, reason: str
+        self, interaction: discord.Interaction, member: discord.Member, reason: str
     ):
-        if user.id == interaction.user.id:
+        if member.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     description="<:white_cross:1096791282023669860> You can't warn yourself",
@@ -30,7 +30,7 @@ class warning_system(commands.Cog):
                 )
             )
 
-        if interaction.user.top_role <= user.top_role:
+        if interaction.user.top_role <= member.top_role:
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     description="<:white_cross:1096791282023669860> You can't warn your superiors",
@@ -39,7 +39,7 @@ class warning_system(commands.Cog):
             )
 
         bot = interaction.guild.get_member(self.bot.user.id)
-        if bot.top_role <= user.top_role:
+        if bot.top_role <= member.top_role:
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     description="<:white_cross:1096791282023669860> I can't warn my superiors",
@@ -49,21 +49,21 @@ class warning_system(commands.Cog):
 
         await DataManager.register_warning(
             interaction.guild.id,
-            user.id,
+            member.id,
             f"{reason} - Warned by {interaction.user.name}",
         )
 
         self.bot.dispatch(
             "warning",
             guild=interaction.guild,
-            warned=user,
+            warned=member,
             warner=interaction.user,
             reason=reason,
         )
 
         return await interaction.response.send_message(
             embed=discord.Embed(
-                description=f"<:white_checkmark:1096793014287995061> {user.name} has been warned",
+                description=f"<:white_checkmark:1096793014287995061> {member.name} has been warned",
                 colour=discord.Colour.green(),
             )
         )

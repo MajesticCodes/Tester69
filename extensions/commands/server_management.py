@@ -406,7 +406,7 @@ class server_management(commands.Cog):
         self,
         interaction: discord.Interaction,
         choice: app_commands.Choice[str],
-        whitelist: discord.User | discord.Role,
+        whitelist: discord.Member | discord.Role,
     ):
         if isinstance(whitelist, discord.Role):
             if whitelist >= interaction.user.top_role:
@@ -421,9 +421,8 @@ class server_management(commands.Cog):
                         colour=discord.Colour.orange(),
                     ),
                 )
-        elif isinstance(whitelist, discord.User | discord.Member):
+        elif isinstance(whitelist, discord.Member):
             user = interaction.guild.get_member(whitelist.id)
-            print(user.top_role)
             if user.top_role >= interaction.user.top_role and user != interaction.user:
                 return await interaction.response.send_message(
                     ephemeral=True,
