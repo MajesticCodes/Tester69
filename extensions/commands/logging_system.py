@@ -533,8 +533,7 @@ class logging(commands.GroupCog):
             return await logs_channel.send(embed=embeds)
 
         if len(before.content or after.content) >= 1024:
-            with open(f"{after.author.id}_edit.txt", "a") as n:
-                n.write(f"Before: {before.content}\nAfter: {after.content}")
+            buffer = BytesIO(f"Before: {before.content}\nAfter: {after.content}".encode("utf8"))
             embed = discord.Embed(
                 title="Message Edit (Too Long)",
                 description=f"**Message Edited in {before.channel.mention}** [Jump to Message]({before.jump_url})",
@@ -542,9 +541,8 @@ class logging(commands.GroupCog):
             )
             embed.set_author(icon_url=after.author.avatar, name=after.author)
             await logs_channel.send(
-                embed=embed, file=discord.File(f"{after.author.id}_edit.txt")
+                embed=embed, file=discord.File(fp=buffer, filename=f"{after.author.id}_edit.txt")
             )
-            return os.remove(f"{after.author.id}_edit.txt")
 
         if before.content != after.content:
             edit.add_field(
@@ -596,6 +594,23 @@ class logging(commands.GroupCog):
             or message.channel.type == discord.channel.ChannelType.private
         ):
             return
+        
+        if len(message.content) >= 1024:
+            buffer = BytesIO(message.content.encode("utf8"))
+            embed = discord.Embed(
+                title="Message Deleted (Too Long)",
+                description=f"**Message sent by {message.author.mention} Deleted in {message.channel.mention}**",
+                colour=discord.Colour.orange(),
+            )
+            embed.set_author(
+                icon_url=message.author.display_avatar, name=message.author
+            )
+            await message.channel.send(
+                embed=embed,
+                file=discord.File(
+                    fp=buffer, filename=f"{message.author}({message.author.id}).txt"
+                ),
+            )
 
         guild_data = await DataManager.get_guild_data(message.guild.id)
         logs_channel = self.bot.get_channel(guild_data["logs_channel_id"])
