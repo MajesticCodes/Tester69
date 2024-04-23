@@ -420,7 +420,7 @@ class DataManager:
     ) -> None:
         async with cls.db_connection.acquire():
             return await cls.db_connection.execute(
-                f"UPDATE giveaways SET {column} = $1 WHERE id = $2", value, giveaway_id
+                f"UPDATE giveaways SET {column} = $1 WHERE id = $2", value, int(giveaway_id)
             )
 
     @classmethod
