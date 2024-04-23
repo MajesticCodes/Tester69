@@ -432,11 +432,12 @@ class DataManager:
             )
             await cls.edit_giveaway_data(giveaway_id, "winners", winners)
             for winner in winners:
-                await cls.edit_giveaway_data(
-                    giveaway_id,
-                    "participants",
-                    giveaway_data["participants"].remove(winner),
-                )
+                giveaway_data["participants"].remove(winner)
+            await cls.edit_giveaway_data(
+                giveaway_id,
+                "participants",
+                giveaway_data["participants"],
+            )
             await cls.edit_giveaway_data(giveaway_id, "ended", True)
             return winners
 
