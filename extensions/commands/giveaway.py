@@ -286,8 +286,7 @@ class giveaway(commands.GroupCog):
                             )
                             self.bot.dispatch(
                                 "manual_giveaway_reroll",
-                                int(giveaway_id),
-                                interaction.guild.id,
+                                int(giveaway_id)
                             )
                         else:
                             await interaction.response.send_message(
@@ -296,7 +295,8 @@ class giveaway(commands.GroupCog):
                     else:
                         if user.id in giveaway_data["winners"]:
                             giveaway_data["winners"].remove(user.id)
-                            new_winner = random.choice(giveaway_data["participants"])
+                            participants = list(giveaway_data["participants"])
+                            new_winner = random.choice(participants)
                             giveaway_data["winners"].append(new_winner)
                             await DataManager.edit_giveaway_data(
                                 giveaway_id, "winners", giveaway_data["winners"]
@@ -308,7 +308,6 @@ class giveaway(commands.GroupCog):
                             self.bot.dispatch(
                                 "manual_giveaway_winner_reroll",
                                 int(giveaway_id),
-                                interaction.guild.id,
                                 new_winner,
                             )
                         else:

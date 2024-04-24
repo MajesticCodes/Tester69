@@ -239,7 +239,7 @@ class giveaway_looper(commands.Cog):
 
     # Manual Giveaway Reroll Listener
     @commands.Cog.listener()
-    async def on_manual_giveaway_reroll(self, giveaway_id: int, guild_id: int):
+    async def on_manual_giveaway_reroll(self, giveaway_id: int):
         giveaway_data = await DataManager.get_giveaway_data(giveaway_id)
         channel = self.bot.get_channel(giveaway_data["channel_id"])
         message = await channel.fetch_message(giveaway_id)
@@ -282,7 +282,7 @@ class giveaway_looper(commands.Cog):
     # Manual Giveaway Winner Reroll Listener
     @commands.Cog.listener()
     async def on_manual_giveaway_winner_reroll(
-        self, giveaway_id: int, guild_id: int, new_winner_id: int
+        self, giveaway_id: int, new_winner_id: int
     ):
         giveaway_data = await DataManager.get_giveaway_data(giveaway_id)
         channel = self.bot.get_channel(giveaway_data["channel_id"])
