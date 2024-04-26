@@ -1,6 +1,5 @@
 import datetime
 import json
-import os
 import random
 from io import BytesIO
 from typing import Optional
