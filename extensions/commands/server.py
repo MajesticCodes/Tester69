@@ -125,15 +125,27 @@ class server(commands.Cog):
     async def servericon(
         self, interaction: discord.Interaction, ephemeral: bool = True
     ):
-        embed = discord.Embed(
-            title=f"{interaction.guild.name}'s Icon",
-            colour=discord.Colour.darker_gray(),
-        )
-        embed.set_author(
-            name=f"{interaction.guild.name}", icon_url=interaction.guild.icon
-        )
-        embed.set_image(url=interaction.guild.icon)
-        await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+        if interaction.guild.icon is not None:
+            embed = discord.Embed(
+                title=f"{interaction.guild.name}'s Icon",
+                colour=discord.Colour.darker_gray(),
+            )
+            embed.set_author(
+                name=f"{interaction.guild.name}", icon_url=interaction.guild.icon
+            )
+            if interaction.guild.icon.is_animated():
+                embed.set_image(url=interaction.guild.icon.with_format("gif"))
+            elif not interaction.guild.icon.is_animated():
+                embed.set_image(url=interaction.guild.icon)
+            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
+        elif interaction.guild.icon is None:
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    description="<:white_cross:1096791282023669860> This server does not have a banner",
+                    colour=discord.Colour.red(),
+                ),
+                ephemeral=True,
+            )
 
     @app_commands.command(
         name="serverbanner", description="Get the banner of the current server"
@@ -151,9 +163,12 @@ class server(commands.Cog):
             embed.set_author(
                 name=f"{interaction.guild.name}", icon_url=interaction.guild.icon
             )
-            embed.set_image(url=interaction.guild.banner)
+            if interaction.guild.banner.is_animated():
+                embed.set_image(url=interaction.guild.banner.with_format("gif"))
+            elif not interaction.guild.banner.is_animated():
+                embed.set_image(url=interaction.guild.banner)
             await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
-        else:
+        elif interaction.guild.banner is None:
             await interaction.response.send_message(
                 embed=discord.Embed(
                     description="<:white_cross:1096791282023669860> This server does not have a banner",
