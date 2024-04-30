@@ -636,7 +636,7 @@ class panel_views(discord.ui.View):
                     await thread.fetch_member(interaction.user.id)
                     i += 1
                     await asyncio.sleep(0.1)
-                except discord.DiscordException:
+                except discord.errors.NotFound:
                     continue
 
         if i >= panel_data["limit_per_user"]:
