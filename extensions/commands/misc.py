@@ -29,7 +29,10 @@ class misc(commands.Cog):
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
     @app_commands.describe(search="The keyword you want to search the Gif by")
     async def search_gif(self, interaction: discord.Interaction, search: Optional[str]):
-        embed = discord.Embed(title=(f"{search} Gif" if search != None else "Random Gif"), colour=discord.Colour.green())
+        embed = discord.Embed(
+            title=(f"{search} Gif" if search != None else "Random Gif"),
+            colour=discord.Colour.green(),
+        )
 
         if search != None:
             search.replace(" ", "+")
@@ -37,15 +40,21 @@ class misc(commands.Cog):
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(
-                    (f"https://api.giphy.com/v1/gifs/random?api_key="
-                    + DataManager.get("config", "giphy_key"))
+                    (
+                        f"https://api.giphy.com/v1/gifs/random?api_key="
+                        + DataManager.get("config", "giphy_key")
+                    )
                     if search is None
-                    else (f"http://api.giphy.com/v1/gifs/search?q={search}&api_key="
-                    + DataManager.get("config", "giphy_key"))
+                    else (
+                        f"http://api.giphy.com/v1/gifs/search?q={search}&api_key="
+                        + DataManager.get("config", "giphy_key")
+                    )
                 ) as response:
                     data = json.loads(await response.text())
                     gif_choice = random.randint(0, 9)
-                    embed.set_image(url=data["data"][gif_choice]["images"]["original"]["url"])
+                    embed.set_image(
+                        url=data["data"][gif_choice]["images"]["original"]["url"]
+                    )
             except IndexError:
                 response = await session.get(
                     f"https://api.giphy.com/v1/gifs/random?api_key="
@@ -68,7 +77,10 @@ class misc(commands.Cog):
     async def search_unsplash(
         self, interaction: discord.Interaction, search: Optional[str]
     ):
-        embed = discord.Embed(title=(f"{search} Image" if search != None else "Random Image"), colour=discord.Colour.green())
+        embed = discord.Embed(
+            title=(f"{search} Image" if search != None else "Random Image"),
+            colour=discord.Colour.green(),
+        )
 
         if search != None:
             search.replace(" ", "+")
@@ -76,11 +88,15 @@ class misc(commands.Cog):
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(
-                    (f"https://api.unsplash.com/photos/random?client_id="
-                    + DataManager.get("config", "unsplash_key"))
+                    (
+                        f"https://api.unsplash.com/photos/random?client_id="
+                        + DataManager.get("config", "unsplash_key")
+                    )
                     if search is None
-                    else (f"https://api.unsplash.com/search/photos?query={search}&client_id="
-                    + DataManager.get("config", "unsplash_key"))
+                    else (
+                        f"https://api.unsplash.com/search/photos?query={search}&client_id="
+                        + DataManager.get("config", "unsplash_key")
+                    )
                 ) as response:
                     data = json.loads(await response.text())
                     embed.set_image(url=data["urls"]["full"])
@@ -107,12 +123,14 @@ class misc(commands.Cog):
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
     async def cat(self, interaction: discord.Interaction):
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://api.thecatapi.com/v1/images/search") as response:
+            async with session.get(
+                "https://api.thecatapi.com/v1/images/search"
+            ) as response:
                 data = json.loads(await response.text())
                 embed = discord.Embed(title="🐱 Meow", colour=discord.Colour.green())
                 embed.url = data[0]["url"]
                 embed.set_image(url=data[0]["url"])
-                
+
         embed.set_footer(
             icon_url=interaction.user.avatar,
             text=f"Requested by - {interaction.user} | Powered by The Cat API ❤️",
@@ -123,12 +141,14 @@ class misc(commands.Cog):
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.user.id))
     async def dog(self, interaction: discord.Interaction):
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://api.thedogapi.com/v1/images/search") as response:
+            async with session.get(
+                "https://api.thedogapi.com/v1/images/search"
+            ) as response:
                 data = json.loads(await response.text())
                 embed = discord.Embed(title="🐶 Woof", colour=discord.Colour.green())
                 embed.url = data[0]["url"]
                 embed.set_image(url=data[0]["url"])
-        
+
         embed.set_footer(
             icon_url=interaction.user.avatar,
             text=f"Requested by - {interaction.user} | Powered by The Dog API ❤️",
@@ -143,7 +163,7 @@ class misc(commands.Cog):
                 "https://icanhazdadjoke.com/", headers={"Accept": "text/plain"}
             ) as response:
                 data = await response.text()
-                
+
         await interaction.response.send_message(
             embed=discord.Embed(
                 description=f"🤣 {data}", colour=discord.Colour.green()
@@ -165,7 +185,9 @@ class misc(commands.Cog):
                     f"https://en.wikipedia.org/api/rest_v1/page/summary/{search}"
                 )
                 data = json.loads(await response.text())
-                embed = discord.Embed(title=f"📚 {search}", colour=discord.Colour.green())
+                embed = discord.Embed(
+                    title=f"📚 {search}", colour=discord.Colour.green()
+                )
                 embed.url = data["content_urls"]["desktop"]["page"]
                 embed.description = data["extract"]
                 embed.set_footer(
@@ -194,14 +216,20 @@ class misc(commands.Cog):
         embeds = []
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://api.urbandictionary.com/v0/random" if search is None else f"https://api.urbandictionary.com/v0/define?term={search}") as response:
+            async with session.get(
+                f"https://api.urbandictionary.com/v0/random"
+                if search is None
+                else f"https://api.urbandictionary.com/v0/define?term={search}"
+            ) as response:
                 for word in json.loads(await response.text())["list"]:
                     try:
                         embed = discord.Embed(
                             title=f"📚 {word['word']}", colour=discord.Colour.green()
                         )
                         embed.url = word["permalink"]
-                        embed.description = word["definition"].replace("[", "").replace("]", "")
+                        embed.description = (
+                            word["definition"].replace("[", "").replace("]", "")
+                        )
                         embed.set_footer(
                             icon_url=interaction.user.avatar,
                             text=f"Requested by - {interaction.user} | Powered by Urban Dictionary API ❤️",
@@ -212,7 +240,7 @@ class misc(commands.Cog):
                             description="<:white_cross:1096791282023669860> Couldn't find a definition for that term",
                             colour=discord.Colour.red(),
                         )
-                        
+
         await Paginator.Simple().paginate(interaction, pages=embeds)
 
     @app_commands.command(name="github", description="Get a user's GitHub profile")
@@ -225,7 +253,9 @@ class misc(commands.Cog):
             try:
                 response = await session.get(f"https://api.github.com/users/{search}")
                 data = json.loads(await response.text())
-                embed = discord.Embed(title=f"📚 {search}", colour=discord.Colour.green())
+                embed = discord.Embed(
+                    title=f"📚 {search}", colour=discord.Colour.green()
+                )
                 embed.url = data["html_url"]
                 if data["bio"] is not None:
                     embed.description = data["bio"]
@@ -242,7 +272,7 @@ class misc(commands.Cog):
             except KeyError:
                 embed = discord.Embed(colour=discord.Colour.red())
                 embed.description = "<:white_cross:1096791282023669860> Couldn't find a GitHub user with that name"
-        
+
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(name="weather", description="Get the weather for a location")
@@ -257,7 +287,7 @@ class misc(commands.Cog):
                 ) as location:
                     lat = json.loads(await location.text())[0]["lat"]
                     lon = json.loads(await location.text())[0]["lon"]
-                
+
                 async with session.get(
                     f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid="
                     + DataManager.get("config", "weather_api_key")
@@ -287,7 +317,7 @@ class misc(commands.Cog):
             except IndexError:
                 embed = discord.Embed(colour=discord.Colour.red())
                 embed.description = "<:white_cross:1096791282023669860> Couldn't find a location with that name"
-            
+
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(
@@ -307,7 +337,7 @@ class misc(commands.Cog):
                 ) as location:
                     lat = json.loads(await location.text())[0]["lat"]
                     lon = json.loads(await location.text())[0]["lon"]
-                
+
                 async with session.get(
                     f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid="
                     + DataManager.get("config", "weather_api_key")
@@ -334,7 +364,7 @@ class misc(commands.Cog):
             except IndexError:
                 embed = discord.Embed(colour=discord.Colour.red())
                 embed.description = "<:white_cross:1096791282023669860> Couldn't find a location with that name"
-            
+
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(

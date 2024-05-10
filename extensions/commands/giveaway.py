@@ -153,7 +153,10 @@ class giveaway_views(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         giveaway_data = await DataManager.get_giveaway_data(interaction.message.id)
-        if giveaway_data["participants"] is None or interaction.user.id not in giveaway_data["participants"]:
+        if (
+            giveaway_data["participants"] is None
+            or interaction.user.id not in giveaway_data["participants"]
+        ):
             giveaway_data["participants"].append(interaction.user.id)
             await DataManager.edit_giveaway_data(
                 interaction.message.id, "participants", giveaway_data["participants"]
@@ -285,8 +288,7 @@ class giveaway(commands.GroupCog):
                                 f"Giveaway rerolled!", ephemeral=True
                             )
                             self.bot.dispatch(
-                                "manual_giveaway_reroll",
-                                int(giveaway_id)
+                                "manual_giveaway_reroll", int(giveaway_id)
                             )
                         else:
                             await interaction.response.send_message(

@@ -228,7 +228,10 @@ class moderation(commands.Cog):
                 )
             )
 
-        elif (isinstance(member, discord.Member) and interaction.user.top_role <= member.top_role):
+        elif (
+            isinstance(member, discord.Member)
+            and interaction.user.top_role <= member.top_role
+        ):
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     description="<:white_cross:1096791282023669860> You can't ban your superiors",
@@ -236,16 +239,19 @@ class moderation(commands.Cog):
                 )
             )
 
-        elif (isinstance(member, discord.Member) and member.guild_permissions.administrator):
+        elif (
+            isinstance(member, discord.Member)
+            and member.guild_permissions.administrator
+        ):
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     description="<:white_cross:1096791282023669860> That user is an adminstrator, I can't do that",
                     colour=discord.Colour.red(),
                 )
             )
-        
+
         bot = interaction.guild.get_member(self.bot.user.id)
-        if (isinstance(member, discord.Member) and bot.top_role <= member.top_role):
+        if isinstance(member, discord.Member) and bot.top_role <= member.top_role:
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     description="<:white_cross:1096791282023669860> That user is higher than me, I can't do that",
@@ -352,7 +358,14 @@ class moderation(commands.Cog):
                                 )
                                 + (
                                     f", did you mean any of these similar usernames?\n\n {'\n'.join([f'* {entry.user.mention} - {entry.user.id} - {entry.user.name}' for entry in bans if member in entry.user.name])}"
-                                    if len([entry.user.name for entry in bans if member in entry.user.name]) > 0
+                                    if len(
+                                        [
+                                            entry.user.name
+                                            for entry in bans
+                                            if member in entry.user.name
+                                        ]
+                                    )
+                                    > 0
                                     else ""
                                 ),
                                 colour=discord.Colour.red(),

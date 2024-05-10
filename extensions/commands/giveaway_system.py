@@ -34,12 +34,12 @@ class giveaway_looper(commands.Cog):
                     winners = await DataManager.draw_giveaway_winners(giveaway["id"])
                 except ValueError:
                     await message.edit(
-                            view=None,
-                        )
+                        view=None,
+                    )
                     return await message.reply(
                         f"Unfortunately, not enough people entered the giveaway for the **{giveaway['prize']}**"
                     )
-                
+
                 end_date = datetime.datetime.strptime(
                     giveaway["end_date"], "%Y-%m-%dT%H:%M:%S.%f%z"
                 )
@@ -223,7 +223,9 @@ class giveaway_looper(commands.Cog):
                         if len(winners) > 0
                         else "Winners: No Winners"
                     ),
-                ).set_footer(text=f'"/giveaway reroll {giveaway_id}" to reroll the giveaway winners'),
+                ).set_footer(
+                    text=f'"/giveaway reroll {giveaway_id}" to reroll the giveaway winners'
+                ),
                 view=None,
             )
             if len(winners) > 0:

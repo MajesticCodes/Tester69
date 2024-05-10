@@ -420,7 +420,9 @@ class DataManager:
     ) -> None:
         async with cls.db_connection.acquire():
             return await cls.db_connection.execute(
-                f"UPDATE giveaways SET {column} = $1 WHERE id = $2", value, int(giveaway_id)
+                f"UPDATE giveaways SET {column} = $1 WHERE id = $2",
+                value,
+                int(giveaway_id),
             )
 
     @classmethod
@@ -430,7 +432,6 @@ class DataManager:
             winners = random.sample(
                 giveaway_data["participants"], giveaway_data["winner_amount"]
             )
-            await cls.edit_giveaway_data(giveaway_id, "winners", winners)
             for winner in winners:
                 giveaway_data["participants"].remove(winner)
             await cls.edit_giveaway_data(
@@ -438,6 +439,7 @@ class DataManager:
                 "participants",
                 giveaway_data["participants"],
             )
+            await cls.edit_giveaway_data(giveaway_id, "winners", winners)
             await cls.edit_giveaway_data(giveaway_id, "ended", True)
             return winners
 

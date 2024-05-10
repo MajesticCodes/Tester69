@@ -192,31 +192,49 @@ class server_management(commands.Cog):
         name="purge", description="Purge a custom amount of messages from this channel"
     )
     @app_commands.guild_only()
-    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.checks.cooldown(1, 10, key=lambda i: (i.guild.id, i.user.id))
     @app_commands.describe(count="The amount of messages to purge")
     async def purge(self, interaction: discord.Interaction, count: int):
-        guild_data = await DataManager.get_guild_data(interaction.guild.id)
-        logs_channel = self.bot.get_channel(guild_data["logs_channel_id"])
-        await interaction.response.defer(ephemeral=True)
-        await interaction.channel.purge(limit=count)
+        if count > 0:
+            guild_data = await DataManager.get_guild_data(interaction.guild.id)
+            logs_channel = self.bot.get_channel(guild_data["logs_channel_id"])
 
-        await asyncio.sleep(2)
-
-        embed = discord.Embed(
-            description=f"{interaction.user.mention} purged {count} messages in {interaction.channel.mention}",
-            colour=discord.Colour.red(),
-        )
-        embed.set_author(url=interaction.user.display_avatar, name=interaction.user)
-        embed.set_footer(text=f"User ID: {interaction.user.id}")
-        await logs_channel.send(embed=embed)
-
-        return await interaction.edit_original_response(
-            embed=discord.Embed(
-                description=f"<:white_checkmark:1096793014287995061> Purged {count} messages!",
-                colour=discord.Colour.green(),
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    description=f"<:white_checkmark:1096793014287995061> Purging {count} messages...",
+                    colour=discord.Colour.green(),
+                )
             )
-        )
+
+            try:
+                deleted = await interaction.channel.purge(limit=count)
+            except discord.errors.NotFound:
+                try:
+                    return await interaction.user.send(
+                        embed=discord.Embed(
+                            description=f"<:white_cross:1096791282023669860> Could not purge messages in {interaction.channel.mention} because the channel was not found",
+                            colour=discord.Colour.red(),
+                        )
+                    )
+                except discord.errors.Forbidden:
+                    return
+
+            await logs_channel.send(
+                embed=discord.Embed(
+                    description=f"<:white_checkmark:1096793014287995061> Purged {count} messages in {interaction.channel.mention}",
+                    colour=discord.Colour.red(),
+                )
+                .set_author(url=interaction.user.display_avatar, name=interaction.user)
+                .set_footer(text=f"User ID: {interaction.user.id}")
+            )
+
+            return await interaction.edit_original_response(
+                embed=discord.Embed(
+                    description=f"<:white_checkmark:1096793014287995061> Purged {len(deleted)} messages!",
+                    colour=discord.Colour.green(),
+                )
+            )
 
     @app_commands.command(
         name="add_blacklisted_words",
@@ -328,7 +346,7 @@ class server_management(commands.Cog):
                     colour=discord.Colour.green(),
                 ),
             )
-        
+
     @app_commands.command(
         name="list_blacklisted_words",
         description="List all blacklisted words in this server",
@@ -352,7 +370,7 @@ class server_management(commands.Cog):
                 description=f"Blacklisted words in this server:\n\n{',\n'.join(blacklisted_words)}",
                 colour=discord.Colour.green(),
             ),
-            ephemeral=True
+            ephemeral=True,
         )
 
     @app_commands.command(
@@ -414,10 +432,12 @@ class server_management(commands.Cog):
                     ephemeral=True,
                     embed=discord.Embed(
                         description=(f"<:white_cross:1096791282023669860> Could not ")
-                         + 
-                         (f"add {whitelist.mention} role to " if choice.value == "add" else f"remove {whitelist.mention} role from ")
-                         +
-                         ("the whitelist because it's higher than your highest role"),
+                        + (
+                            f"add {whitelist.mention} role to "
+                            if choice.value == "add"
+                            else f"remove {whitelist.mention} role from "
+                        )
+                        + ("the whitelist because it's higher than your highest role"),
                         colour=discord.Colour.orange(),
                     ),
                 )
@@ -428,10 +448,14 @@ class server_management(commands.Cog):
                     ephemeral=True,
                     embed=discord.Embed(
                         description=(f"<:white_cross:1096791282023669860> Could not ")
-                         + 
-                         (f"add {whitelist.mention} to " if choice.value == "add" else f"remove {whitelist.mention} from ")
-                         +
-                         ("the whitelist because their highest role is higher than yours"),
+                        + (
+                            f"add {whitelist.mention} to "
+                            if choice.value == "add"
+                            else f"remove {whitelist.mention} from "
+                        )
+                        + (
+                            "the whitelist because their highest role is higher than yours"
+                        ),
                         colour=discord.Colour.orange(),
                     ),
                 )
@@ -489,7 +513,9 @@ class server_management(commands.Cog):
                     ),
                 )
 
-    @app_commands.command(name="list_whitelist", description="List all whitelisted users and/or roles")
+    @app_commands.command(
+        name="list_whitelist", description="List all whitelisted users and/or roles"
+    )
     @app_commands.guild_only()
     @app_commands.checks.has_permissions(administrator=True)
     async def list_whitelist(self, interaction: discord.Interaction):
@@ -508,19 +534,19 @@ class server_management(commands.Cog):
 
         role_list = []
         user_list = []
-        
+
         for i in wlist:
             role = interaction.guild.get_role(i)
             member = interaction.guild.get_member(i)
-            
+
             if role:
                 role_list.insert(0, role)
             elif member:
                 user_list.insert(0, member)
-        
+
         role_list = sorted(role_list, key=lambda r: r.position, reverse=True)
         user_list = sorted(user_list, key=lambda u: u.name, reverse=True)
-        
+
         wlist = [r.mention for r in role_list] + [u.mention for u in user_list]
 
         await interaction.response.send_message(
@@ -528,7 +554,7 @@ class server_management(commands.Cog):
                 description=f"Whitelisted users and/or roles in this server:\n\n{',\n'.join(wlist)}",
                 colour=discord.Colour.green(),
             ),
-            ephemeral=True
+            ephemeral=True,
         )
 
 

@@ -628,7 +628,7 @@ class panel_views(discord.ui.View):
                 ),
                 ephemeral=True,
             )
-        
+
         i = 0
         for thread in interaction.channel.threads:
             if thread.name == f"ticket-{interaction.user.name}":

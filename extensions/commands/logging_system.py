@@ -476,7 +476,10 @@ class logging(commands.GroupCog):
         ):
             return
 
-        if any(word in content for word in words_in_blacklist) and not (message.author.guild_permissions.manage_messages or message.author.guild_permissions.administrator):
+        if any(word in content for word in words_in_blacklist) and not (
+            message.author.guild_permissions.manage_messages
+            or message.author.guild_permissions.administrator
+        ):
             await message.delete()
 
     # Message Edit Logs
@@ -533,7 +536,9 @@ class logging(commands.GroupCog):
             return await logs_channel.send(embed=embeds)
 
         if len(before.content or after.content) >= 1024:
-            buffer = BytesIO(f"Before: {before.content}\nAfter: {after.content}".encode("utf8"))
+            buffer = BytesIO(
+                f"Before: {before.content}\nAfter: {after.content}".encode("utf8")
+            )
             embed = discord.Embed(
                 title="Message Edit (Too Long)",
                 description=f"**Message Edited in {before.channel.mention}** [Jump to Message]({before.jump_url})",
@@ -541,7 +546,8 @@ class logging(commands.GroupCog):
             )
             embed.set_author(icon_url=after.author.avatar, name=after.author)
             await logs_channel.send(
-                embed=embed, file=discord.File(fp=buffer, filename=f"{after.author.id}_edit.txt")
+                embed=embed,
+                file=discord.File(fp=buffer, filename=f"{after.author.id}_edit.txt"),
             )
 
         if before.content != after.content:
@@ -594,7 +600,7 @@ class logging(commands.GroupCog):
             or message.channel.type == discord.channel.ChannelType.private
         ):
             return
-        
+
         if len(message.content) >= 1024:
             buffer = BytesIO(message.content.encode("utf8"))
             embed = discord.Embed(
@@ -670,7 +676,10 @@ class logging(commands.GroupCog):
         if len(message.content) > 0:
             embed.add_field(name="**Content**", value=f"{message.content}")
         if any(word in content for word in words_in_blacklist):
-            if not any(role.id in filtered_words_data["whitelist"] for role in message.author.roles):    
+            if not any(
+                role.id in filtered_words_data["whitelist"]
+                for role in message.author.roles
+            ):
                 embed.add_field(name="**Reason**", value="Blacklisted Word(s)")
                 embed.add_field(
                     name="**Detailed Reason**", value=f"`{'`, `'.join(bad_words_said)}`"
@@ -723,7 +732,10 @@ class logging(commands.GroupCog):
         if (
             any(word in content for word in words_in_blacklist)
             and blocked_words_channel != None
-            and not any(role.id in filtered_words_data["whitelist"] for role in message.author.roles)
+            and not any(
+                role.id in filtered_words_data["whitelist"]
+                for role in message.author.roles
+            )
         ):
             await blocked_words_channel.send(embed=embed)
         else:

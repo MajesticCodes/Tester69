@@ -244,7 +244,7 @@ class mine(commands.GroupCog):
                     description="Welcome to the mines, here you are able to mine for various resources, and later smelt them down to craft various items with them.",
                     colour=discord.Colour.from_rgb(139, 69, 19),
                 ).set_image(url="attachment://mining.jpg"),
-                view=view
+                view=view,
             )
             view.response = await interaction.original_response()
 
