@@ -104,13 +104,6 @@ class giveaway_modal(discord.ui.Modal, title="Create a Giveaway"):
                 f"Invalid winner amount!", ephemeral=True
             )
 
-    async def on_error(
-        self, interaction: discord.Interaction, error: Exception
-    ) -> None:
-        await interaction.response.send_message(
-            f"Invalid time or winner amount!", ephemeral=True
-        )
-
 
 class giveaway_leave_view(discord.ui.View):
     def __init__(self, giveaway_id, bot):
