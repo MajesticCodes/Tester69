@@ -1,5 +1,4 @@
 import datetime
-import os
 import re
 from io import BytesIO
 from typing import Optional
@@ -690,29 +689,26 @@ class logging(commands.GroupCog):
                 )
             else:
                 pass
+
         if len(message.attachments) > 1:
             embed.add_field(
                 name="Attachments",
                 value=f"**{', '.join([attachment.url for attachment in message.attachments])}**",
                 inline=False,
             )
+
         elif len(message.attachments) == 1:
             try:
-                i = 0
-                while not image_data and i < 3:
-                    try:
-                        image_data = await message.attachments[0].read()
-                    except discord.errors.HTTPException:
-                        i += 1
-
-                if image_data:
+                try:
+                    image_data = await message.attachments[0].read()
                     image = Image.open(BytesIO(image_data))
                     buffer = BytesIO()
                     image.save(buffer, format="PNG")
                     buffer.seek(0)
                     f = discord.File(fp=buffer, filename="image.png")
                     embed.set_image(url="attachment://image.png")
-                else:
+                except discord.errors.HTTPException:
+                    embed.footer = f"Author ID: {message.author.id} | Message ID: {message.id} | Image: {message.attachments[0].url}"
                     embed.set_image(url=message.attachments[0].url)
                     return await logs_channel.send(embed=embed)
                 
