@@ -655,6 +655,13 @@ class logging(commands.GroupCog):
             description=f"**Message sent by {message.author.mention} Deleted in {message.channel.mention}**",
             colour=discord.Colour.orange(),
         )
+        embed.set_author(
+            icon_url=message.author.display_avatar, name=f"{message.author}"
+        )
+        embed.set_footer(
+            text=f"Author ID: {message.author.id} | Message ID: {message.id}"
+        )
+
         if len(message.content) >= 1024:
             buffer = BytesIO(message.content.encode("utf8"))
 
@@ -662,9 +669,6 @@ class logging(commands.GroupCog):
                 title="Message Deleted (Too Long)",
                 description=f"**Message sent by {message.author.mention} Deleted in {message.channel.mention}**",
                 colour=discord.Colour.orange(),
-            )
-            embed.set_author(
-                icon_url=message.author.display_avatar, name=message.author
             )
             await logs_channel.send(
                 embed=embed,
@@ -694,40 +698,35 @@ class logging(commands.GroupCog):
             )
         elif len(message.attachments) == 1:
             try:
-                image = Image.open(BytesIO(await message.attachments[0].read()))
-                buffer = BytesIO()
-                image.save(buffer, format="PNG")
-                buffer.seek(0)
-                f = discord.File(fp=buffer, filename="image.png")
-                embed.set_image(url="attachment://image.png")
-                embed.set_author(
-                    icon_url=message.author.display_avatar, name=f"{message.author}"
-                )
-                embed.set_footer(
-                    text=f"Author ID: {message.author.id} | Message ID: {message.id}"
-                )
+                i = 0
+                while not image_data and i < 3:
+                    try:
+                        image_data = await message.attachments[0].read()
+                    except discord.errors.HTTPException:
+                        i += 1
+
+                if image_data:
+                    image = Image.open(BytesIO(image_data))
+                    buffer = BytesIO()
+                    image.save(buffer, format="PNG")
+                    buffer.seek(0)
+                    f = discord.File(fp=buffer, filename="image.png")
+                    embed.set_image(url="attachment://image.png")
+                else:
+                    embed.set_image(url=message.attachments[0].url)
+                    return await logs_channel.send(embed=embed)
+                
                 return await logs_channel.send(embed=embed, file=f)
             except UnidentifiedImageError:
                 embed.set_image(url=message.attachments[0].url)
-            embed.set_author(
-                icon_url=message.author.display_avatar, name=f"{message.author}"
-            )
-            embed.set_footer(
-                text=f"Author ID: {message.author.id} | Message ID: {message.id}"
-            )
-            return await logs_channel.send(embed=embed)
+                return await logs_channel.send(embed=embed)
+            
         if len(message.stickers) >= 1:
             embed.add_field(
                 name="Stickers",
                 value=f"**{', '.join([sticker.url for sticker in message.stickers])}**",
                 inline=False,
             )
-        embed.set_author(
-            icon_url=message.author.display_avatar, name=f"{message.author}"
-        )
-        embed.set_footer(
-            text=f"Author ID: {message.author.id} | Message ID: {message.id}"
-        )
 
         if (
             any(word in content for word in words_in_blacklist)
