@@ -707,16 +707,15 @@ class logging(commands.GroupCog):
                     buffer.seek(0)
                     f = discord.File(fp=buffer, filename="image.png")
                     embed.set_image(url="attachment://image.png")
-                except discord.errors.HTTPException:
-                    embed.footer = f"Author ID: {message.author.id} | Message ID: {message.id} | Image: {message.attachments[0].url}"
+                except discord.errors.HTTPException or discord.errors.NotFound:
                     embed.set_image(url=message.attachments[0].url)
                     return await logs_channel.send(embed=embed)
-                
+
                 return await logs_channel.send(embed=embed, file=f)
             except UnidentifiedImageError:
                 embed.set_image(url=message.attachments[0].url)
                 return await logs_channel.send(embed=embed)
-            
+
         if len(message.stickers) >= 1:
             embed.add_field(
                 name="Stickers",
