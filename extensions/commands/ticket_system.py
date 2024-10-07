@@ -1065,38 +1065,38 @@ class ticket(commands.GroupCog):
         self, interaction: discord.Interaction, message: discord.Message
     ):
         await interaction.response.defer(ephemeral=True)
-        for panel in await DataManager.get_all_panels():
-            if message.id == panel["id"]:
-                panel = await DataManager.get_panel_data(message.id)
-                await interaction.edit_original_response(
-                    embed=discord.Embed(
-                        title=panel["panel_title"],
-                        description=panel["panel_description"]
-                        + (
-                            f"\n\nCurrent Panel Moderators: {','.join([f'<@&{role_id}>' for role_id in panel['panel_moderators']])}"
-                            if panel["panel_moderators"]
-                            else ""
-                        ),
-                        colour=discord.Colour.blurple(),
+        panels = await DataManager.get_all_panels()
+        if any(message.id == panel["id"] for panel in panels):
+            panel = await DataManager.get_panel_data(message.id)
+            await interaction.edit_original_response(
+                embed=discord.Embed(
+                    title=panel["panel_title"],
+                    description=panel["panel_description"]
+                    + (
+                        f"\n\nCurrent Panel Moderators: {','.join([f'<@&{role_id}>' for role_id in panel['panel_moderators']])}"
+                        if panel["panel_moderators"]
+                        else ""
                     ),
-                    view=panel_edit_views(
-                        self.bot,
-                        message.id,
-                        interaction,
-                        panel["panel_title"],
-                        panel["panel_description"],
-                        panel["limit_per_user"],
-                        panel["panel_moderators"],
-                    ),
+                    colour=discord.Colour.blurple(),
+                ),
+                view=panel_edit_views(
+                    self.bot,
+                    message.id,
+                    interaction,
+                    panel["panel_title"],
+                    panel["panel_description"],
+                    panel["limit_per_user"],
+                    panel["panel_moderators"],
+                ),
+            )
+        else:
+            return await interaction.edit_original_response(
+                embed=discord.Embed(
+                    title="Error",
+                    description="This is not a ticket panel",
+                    colour=discord.Colour.red(),
                 )
-            else:
-                return await interaction.edit_original_response(
-                    embed=discord.Embed(
-                        title="Error",
-                        description="This is not a ticket panel",
-                        colour=discord.Colour.red(),
-                    )
-                )
+            )
 
 
 async def setup(bot: commands.AutoShardedBot):
